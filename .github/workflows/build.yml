@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.9', '3.10', '3.11']
+
+    env:
+      RELEASE_FILE: ${{ github.event.repository.name }}-${{ github.event.release.tag_name || github.sha }}-py${{ matrix.python }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Dependencies
+        run: |
+          make dev-deps
+
+      - name: Build Packages
+        run: |
+          make dist
+
+      - name: Upload Packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.RELEASE_FILE }}
+          path: dist/

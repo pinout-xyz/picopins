@@ -14,7 +14,7 @@ https://github.com/sponsors/Gadgetoid
 https://www.patreon.com/gadgetoid
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 pinout = [[col.strip() for col in line.split("|")] for line in """
       |         |        |        |      |  |     ┏━━━━━┓     |  |          |        |        |         |

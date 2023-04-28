@@ -1,5 +1,10 @@
 # Changelog
 
+1.0.1
+-----
+
+* Tidy up readme
+
 1.0.0
 -----
 

@@ -64,7 +64,10 @@ THEME = {
 def usage(error=None):
     print(f"""
 [#859900]picopins[/] [#2aa198]v{__version__}[/] - a beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico
-           Created by @gadgetoid - https://pico.pinout.xyz
+
+Created by @gadgetoid - https://pico.pinout.xyz
+
+bugs:  https://github.com/pinout-xyz/picopins
 
 usage: picopins [--pins] [--all] or {{{",".join(COLS)}}}
        --pins - show physical pin numbers
@@ -72,8 +75,9 @@ usage: picopins [--pins] [--all] or {{{",".join(COLS)}}}
        --hide-gpio - hide GPIO pins
        --find "<text>" - highlight pins matching <text>
 
-eg:    picopins i2c  - show GPIO and I2C labels
-       picopins      - basic GPIO pinout
+eg:    picopins i2c                   - show GPIO and I2C labels
+       picopins                       - basic GPIO pinout
+       picopins --all --find "PWM3 A" - highlight any "PWM3 A" labels
 """)
     if error:
         print(f"[red]Error: {error}[/]")

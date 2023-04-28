@@ -3,19 +3,19 @@ requires = ["hatchling", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
-name = "PROJECT_NAME"
+name = "picopins"
 dynamic = ["version", "readme"]
-description = "__DESCRIPTION__"
+description = "A command-line pinout for the Raspberry Pi Pico W"
 license = {file = "LICENSE"}
 requires-python = ">= 3.7"
 authors = [
-    { name = "Philip Howard", email = "phil@pimoroni.com" },
+    { name = "Philip Howard", email = "pinout@gadgetoid.com" },
 ]
 maintainers = [
-    { name = "Philip Howard", email = "phil@pimoroni.com" },
+    { name = "Philip Howard", email = "pinout@gadgetoid.com" },
 ]
 keywords = [
-    "Pi",
+    "Pico",
     "Raspberry",
 ]
 classifiers = [
@@ -31,21 +31,23 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries",
     "Topic :: System :: Hardware",
 ]
-dependencies = []
+dependencies = ["rich"]
 
 [project.urls]
-GitHub = "https://www.github.com/pimoroni/PROJECT_NAME-python"
-Homepage = "https://www.pimoroni.com"
+GitHub = "https://www.github.com/pinout-xyz/picopins"
+Homepage = "https://pico.pinout.xyz"
+
+[project.scripts]
+picopins = "picopins.__main__:main"
 
 [tool.hatch.version]
-path = "PROJECT_NAME/__init__.py"
+path = "picopins/__main__.py"
 
 [tool.hatch.build]
 include = [
-    "PROJECT_NAME",
+    "picopins",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -77,6 +79,9 @@ exclude = [
     'build',
     'dist'
 ]
+ignore = [
+    'E701'
+]
 line-length = 200
 
 [tool.codespell]
@@ -106,8 +111,3 @@ ignore = [
     '.coveragerc',
     'requirements-dev.txt'
 ]
-
-[pimoroni]
-apt_packages = ["python3-rpi.gpio", "python3-smbus"]
-configtxt = []
-commands = []

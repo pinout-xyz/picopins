@@ -10,8 +10,6 @@ else
 	@echo "WARNING: You should 'make dev-deps'\n"
 endif
 	@echo "Usage: make <target>, where target is one of:\n"
-	@echo "install:      install the library locally from source"
-	@echo "uninstall:    uninstall the local library"
 	@echo "dev-deps:     install Python dev dependencies"
 	@echo "check:        perform basic integrity checks on the codebase"
 	@echo "qa:           run linting and package QA"
@@ -21,12 +19,6 @@ endif
 	@echo "testdeploy:   build and upload to test PyPi"
 	@echo "deploy:       build and upload to PyPi"
 	@echo "tag:          tag the repository with the current version\n"
-
-install:
-	./install.sh --unstable
-
-uninstall:
-	./uninstall.sh
 
 dev-deps:
 	python3 -m pip install -r requirements-dev.txt

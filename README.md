@@ -2,11 +2,11 @@
 
 A beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico.
 
+![Example image](https://raw.githubusercontent.com/pinout-xyz/picopins/main/example.png)
+
 [![Build Status](https://img.shields.io/github/actions/workflow/status/pinout-xyz/picopins/build.yml?branch=main)](https://github.com/pinout-xyz/picopins/actions/workflows/build.yml)
 [![PyPi Package](https://img.shields.io/pypi/v/picopins.svg)](https://pypi.python.org/pypi/picopins)
 [![Python Versions](https://img.shields.io/pypi/pyversions/picopins.svg)](https://pypi.python.org/pypi/picopins)
-
-Generated from [the Pimoroni Python Boilerplate](https://github.com/pimoroni/boilerplate-python).
 
 # Usage
 

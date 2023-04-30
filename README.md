@@ -24,3 +24,11 @@ eg:    picopins i2c  - show GPIO and I2C labels
 # Installing
 
 * Just run `python3 -m pip install picopins`
+
+# Achknowledgements
+
+This project was inspired by GPIO Zero's command-line pinout - https://github.com/gpiozero/gpiozero
+
+It somehow wasn't inspired by Raspberry Pi Spy's "picopins" which came first and solves this same problem in bash - https://www.raspberrypi-spy.co.uk/2022/12/pi-pico-pinout-display-on-the-command-line/
+
+Like RPi Spy's picopins it started as a GitHub gist, you can find the history here - https://gist.github.com/Gadgetoid/192af85a3eb05d4a6ac1db076c4ef118/revisions

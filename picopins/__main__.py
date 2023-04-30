@@ -1,4 +1,5 @@
 #!/bin/env python3
+import re
 import sys
 
 from rich import print
@@ -12,11 +13,14 @@ Support me:
 https://ko-fi.com/gadgetoid
 https://github.com/sponsors/Gadgetoid
 https://www.patreon.com/gadgetoid
+
+Shout-out to Raspberry Pi Spy for having almost this exact idea first:
+https://www.raspberrypi-spy.co.uk/2022/12/pi-pico-pinout-display-on-the-command-line/
 """
 
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
-pinout = [[col.strip() for col in line.split("|")] for line in """
+PINOUT = [[col for col in line.split("|")] for line in """
       |         |        |        |      |  |     ┏━━━━━┓     |  |          |        |        |         |
       |         |        |        |      |  |┏━━━━┫     ┣━━━━┓|  |          |        |        |         |
 PWM0 A|UART0 TX |I2C0 SDA|SPI0 RX |GP0   |1 |┃◎   ┗━━━━━┛   ◎┃|40|VBUS      |        |        |         |
@@ -42,7 +46,16 @@ PWM7 B|UART0 RTS|I2C1 SCL|SPI1 TX |GP15  |20|┃◎    ◎ ▣ ◎    ◎┃|21|
       |         |        |        |      |  |┗━━━━━━━━━━━━━━━┛|  |          |        |        |         |
 """.splitlines()[1:]]
 
-COLS = ["spi", "i2c", "uart", "pwm"]
+LEFT_PINS = [[col.strip() for col in reversed(row[0:6])] for row in PINOUT]
+RIGHT_PINS = [[col.strip() for col in row[7:]] for row in PINOUT]
+DIAGRAM = [row[6] for row in PINOUT]
+
+ROWS = len(LEFT_PINS)
+COLS = ["pins", "gpio", "spi", "i2c", "uart", "pwm"]
+COL_PIN_NUMS = 0
+COL_GPIO = 1
+
+LED_ROW = 3
 
 THEME = {
     "gpio": "#859900",
@@ -52,69 +65,104 @@ THEME = {
     "uart": "#6c71c4",
     "pwm": "#666666",
     "panel": "#ffffff on #000000",
+    "panel_light": "#000000 on #fdf6e3",
     "diagram": "#555555",
     "adc": "#2aa198",
     "power": "#dc322f",
     "ground": "#005b66",
     "run": "#df8f8e",
-    "highlight": "#dc322f on white"
+    "highlight": "bold #dc322f on white",
+    "highlight_row": "bold {fg} on #444444"
 }
 
 
 def usage(error=None):
+    error = f"\n[red]Error: {error}[/]\n" if error else ""
     print(f"""
 [#859900]picopins[/] [#2aa198]v{__version__}[/] - a beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico
-
-Created by @gadgetoid - https://pico.pinout.xyz
-
-bugs:  https://github.com/pinout-xyz/picopins
-
-usage: picopins [--pins] [--all] or {{{",".join(COLS)}}}
-       --pins - show physical pin numbers
-       --all or {{{",".join(COLS)}}} - pick list of interfaces to show
-       --hide-gpio - hide GPIO pins
+{error}
+usage: picopins [--...] [--all] or {{{",".join(COLS[2:])}}} [--find <text>]
+       --pins          - show physical pin numbers
+       --all or {{{",".join(COLS[2:])}}} - pick list of interfaces to show
+       --hide-gpio     - hide GPIO pins
+       --light         - melt your eyeballs
        --find "<text>" - highlight pins matching <text>
+                         supports regex if you're feeling sassy!
 
-eg:    picopins i2c                   - show GPIO and I2C labels
-       picopins                       - basic GPIO pinout
-       picopins --all --find "PWM3 A" - highlight any "PWM3 A" labels
+eg:    picopins i2c                    - show GPIO and I2C labels
+       picopins                        - basic GPIO pinout
+       picopins --all --find "PWM3 A"  - highlight any "PWM3 A" labels
+       picopins --all --find "PWM.* A" - highlight any PWM A channels
+
+web:   https://pico.pinout.xyz
+bugs:  https://github.com/pinout-xyz/picopins
 """)
-    if error:
-        print(f"[red]Error: {error}[/]")
     sys.exit(1 if error else 0)
 
 
-def gpio_style(pin, label):
-    style = THEME["gpio"]
-    if pin in (3, 8, 13, 18, 23, 28, 38): style = THEME["ground"]
-    if pin in (40, 39, 37, 36): style = THEME["power"]
-    if pin in (35, 34, 33, 32, 31): style = THEME["adc"]
-    if pin == 30: style = THEME["run"]
+def gpio_style(pin):
+    if pin in (3, 8, 13, 18, 23, 28, 38): return "ground"
+    if pin in (40, 39, 37, 36): return "power"
+    if pin in (35, 34, 33, 32, 31): return "adc"
+    if pin == 30: return "run"
+    return "gpio"
+
+
+def styled(label, style, fg=None):
+    style = THEME[style]
+    style = style.format(fg=fg)
     return f'[{style}]{label}[/]'
 
 
-def build_row(row, show_indexes, find=None):
-    for index in show_indexes:
-        label = row[index]
-        # Special case styling for GPIO labels and search results
-        if find and (find in label or find in label.lower()):
-            label = f'[{THEME["highlight"]}]{label}[/]'
+def search(pin, highlight):
+    if not highlight:
+        return False
+    # Hack to make "--find adc" also find A0, A1, etc
+    if highlight.lower() == "adc":
+        highlight += "|a[0-9]"
+    highlight = re.compile(highlight, re.I)
+    # Match search term against pin label
+    return re.search(highlight, pin) is not None
+
+
+def build_pins(pins, show_indexes, highlight=None):
+    # Find all labels including the highlight word
+    search_highlight = [search(pin, highlight) for pin in pins]
+    # See if any non-visble labels match
+    has_hidden_results = True in [index not in show_indexes and value
+                                  for index, value in enumerate(search_highlight)]
+    # Get the phyical pin for special case GPIO highlighting
+    physical_pin_number = int(pins[COL_PIN_NUMS]) if pins[COL_PIN_NUMS] != "" else None
+    # Iterate through the visible labels
+    for i in show_indexes:
+        label = pins[i]
+        if search_highlight[i]:
+            yield styled(label, "highlight")
+        elif i == COL_GPIO:  # GPn / VSYS etc
+            # Special case for styling power, ground, GPn, run, etc
+            style = gpio_style(physical_pin_number)
+            # Highlight for a non-visible search result
+            if has_hidden_results:
+                yield styled(label, "highlight_row", fg=THEME[style])
+            else:
+                yield styled(label, style)
         else:
-            if index == 4 and row[5] != "":
-                label = gpio_style(int(row[5]), label)
-            if index == 8 and row[7] != "":
-                label = gpio_style(int(row[7]), label)
-        # Slight fudge for whitespace between labels
-        if index >= 6:
-            label = " " + label
-        if index <= 5:
-            label = label + " "
-        yield label
+            # Table column styles will catch the rest
+            yield label
+
+
+def build_row(row, show_indexes, highlight=None):
+    for pin in build_pins(LEFT_PINS[row], show_indexes, highlight):
+        yield pin + " "
+    yield " " + DIAGRAM[row]
+    # We can't reverse a generator
+    for pin in reversed(list(build_pins(RIGHT_PINS[row], show_indexes, highlight))):
+        yield " " + pin
 
 
 def valid_label(label):
-    if label not in COLS:
-        usage(f"Invalid interface \"{label}\"")
+    if label not in COLS[2:]:
+        usage(f"Invalid interface \"{label}\".")
     return label
 
 
@@ -125,54 +173,54 @@ def main():
     opts_all = "--all" in sys.argv
     opts_pins = "--pins" in sys.argv
     opts_hide_gpio = "--hide-gpio" in sys.argv
+    opts_light_mode = "--light" in sys.argv
+    opts_blink = "--blink" in sys.argv
+    opts_find = None
 
     if "--find" in sys.argv:
         index = sys.argv.index("--find") + 1
         opts_find = sys.argv[index]
         del sys.argv[index]
-    else:
-        opts_find = None
 
+    # Assume any non -- args are labels
     opts_show = [valid_label(arg) for arg in sys.argv[1:] if not arg.startswith("--")]
 
     if opts_show == [] and opts_all:
-        opts_show = COLS
+        opts_show = COLS[2:]
     elif opts_all:
         usage("Please use either --all or a list of interfaces.")
-
 
     show_indexes = []
     grid = Table.grid(expand=True)
 
     for label in reversed(opts_show):
         grid.add_column(justify="left", style=THEME[label], no_wrap=True)
-        show_indexes.append(list(reversed(COLS)).index(label))
+        show_indexes.append(COLS.index(label))
 
     if not opts_hide_gpio:
         grid.add_column(justify="right", style=THEME["gpio"], no_wrap=True)
-        show_indexes += [4]
+        show_indexes.append(COL_GPIO)
 
     if opts_pins:
         grid.add_column(justify="right", style=THEME["pins"], no_wrap=True)
-        show_indexes += [5]
+        show_indexes.append(COL_PIN_NUMS)
 
-    grid.add_column(justify="center", no_wrap=True, style=THEME["diagram"])
-    show_indexes += [6]
+    grid.add_column(no_wrap=True, style=THEME["diagram"])
 
     if opts_pins:
         grid.add_column(justify="left", style=THEME["pins"], no_wrap=True)
-        show_indexes += [7]
 
     if not opts_hide_gpio:
         grid.add_column(justify="left", style=THEME["gpio"], no_wrap=True)
-        show_indexes += [8]
 
     for label in opts_show:
         grid.add_column(justify="left", style=THEME[label], no_wrap=True)
-        show_indexes.append(9 + COLS.index(label))
 
-    for row in pinout:
-        grid.add_row(*build_row(row, show_indexes, find=opts_find))
+    if opts_blink:
+        DIAGRAM[LED_ROW] = DIAGRAM[LED_ROW].replace("▩", "[blink red]▩[/]")
+
+    for i in range(ROWS):
+        grid.add_row(*build_row(i, show_indexes, highlight=opts_find))
 
     layout = Table.grid(expand=True)
     layout.add_row(grid)
@@ -182,7 +230,7 @@ def main():
         layout,
         title="Raspberry Pi Pico Pinout",
         expand=False,
-        style=THEME["panel"]))
+        style=THEME["panel_light"] if opts_light_mode else THEME["panel"]))
 
 
 if __name__ == "__main__":

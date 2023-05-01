@@ -174,7 +174,6 @@ def main():
     opts_pins = "--pins" in sys.argv
     opts_hide_gpio = "--hide-gpio" in sys.argv
     opts_light_mode = "--light" in sys.argv
-    opts_blink = "--blink" in sys.argv
     opts_find = None
 
     if "--find" in sys.argv:
@@ -216,8 +215,9 @@ def main():
     for label in opts_show:
         grid.add_column(justify="left", style=THEME[label], no_wrap=True)
 
-    if opts_blink:
+    if search("GP25 LED", opts_find):
         DIAGRAM[LED_ROW] = DIAGRAM[LED_ROW].replace("▩", "[blink red]▩[/]")
+        DIAGRAM[LED_ROW + 1] = DIAGRAM[LED_ROW + 1].replace("GP25", styled("GP25", "highlight"))
 
     for i in range(ROWS):
         grid.add_row(*build_row(i, show_indexes, highlight=opts_find))

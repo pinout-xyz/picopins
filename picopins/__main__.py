@@ -2,7 +2,7 @@
 import re
 import sys
 
-from rich import print
+import rich
 from rich.panel import Panel
 from rich.table import Table
 
@@ -20,7 +20,7 @@ https://www.raspberrypi-spy.co.uk/2022/12/pi-pico-pinout-display-on-the-command-
 
 __version__ = '1.1.0'
 
-PINOUT = [[col for col in line.split("|")] for line in """
+PINOUT = [line.split("|") for line in """
       |         |        |        |      |  |     ┏━━━━━┓     |  |          |        |        |         |
       |         |        |        |      |  |┏━━━━┫     ┣━━━━┓|  |          |        |        |         |
 PWM0 A|UART0 TX |I2C0 SDA|SPI0 RX |GP0   |1 |┃◎   ┗━━━━━┛   ◎┃|40|VBUS      |        |        |         |
@@ -78,7 +78,7 @@ THEME = {
 
 def usage(error=None):
     error = f"\n[red]Error: {error}[/]\n" if error else ""
-    print(f"""
+    rich.print(f"""
 [#859900]picopins[/] [#2aa198]v{__version__}[/] - a beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico
 {error}
 usage: picopins [--...] [--all] or {{{",".join(COLS[2:])}}} [--find <text>]
@@ -160,77 +160,90 @@ def build_row(row, show_indexes, highlight=None):
         yield " " + pin
 
 
-def valid_label(label):
-    if label not in COLS[2:]:
-        usage(f"Invalid interface \"{label}\".")
-    return label
-
-
-def main():
-    if "--help" in sys.argv:
-        usage()
-
-    opts_all = "--all" in sys.argv
-    opts_pins = "--pins" in sys.argv
-    opts_hide_gpio = "--hide-gpio" in sys.argv
-    opts_light_mode = "--light" in sys.argv
-    opts_find = None
-
-    if "--find" in sys.argv:
-        index = sys.argv.index("--find") + 1
-        opts_find = sys.argv[index]
-        del sys.argv[index]
-
-    # Assume any non -- args are labels
-    opts_show = [valid_label(arg) for arg in sys.argv[1:] if not arg.startswith("--")]
-
-    if opts_show == [] and opts_all:
-        opts_show = COLS[2:]
-    elif opts_all:
-        usage("Please use either --all or a list of interfaces.")
-
+def picopins(opts):
     show_indexes = []
     grid = Table.grid(expand=True)
 
-    for label in reversed(opts_show):
+    for label in reversed(opts.show):
         grid.add_column(justify="left", style=THEME[label], no_wrap=True)
         show_indexes.append(COLS.index(label))
 
-    if not opts_hide_gpio:
+    if opts.show_gpio:
         grid.add_column(justify="right", style=THEME["gpio"], no_wrap=True)
         show_indexes.append(COL_GPIO)
 
-    if opts_pins:
+    if opts.show_pins:
         grid.add_column(justify="right", style=THEME["pins"], no_wrap=True)
         show_indexes.append(COL_PIN_NUMS)
 
     grid.add_column(no_wrap=True, style=THEME["diagram"])
 
-    if opts_pins:
+    if opts.show_pins:
         grid.add_column(justify="left", style=THEME["pins"], no_wrap=True)
 
-    if not opts_hide_gpio:
+    if opts.show_gpio:
         grid.add_column(justify="left", style=THEME["gpio"], no_wrap=True)
 
-    for label in opts_show:
+    for label in opts.show:
         grid.add_column(justify="left", style=THEME[label], no_wrap=True)
 
-    if search("GP25 LED", opts_find):
+    if search("GP25 LED", opts.find):
         DIAGRAM[LED_ROW] = DIAGRAM[LED_ROW].replace("▩", "[blink red]▩[/]")
         DIAGRAM[LED_ROW + 1] = DIAGRAM[LED_ROW + 1].replace("GP25", styled("GP25", "highlight"))
 
     for i in range(ROWS):
-        grid.add_row(*build_row(i, show_indexes, highlight=opts_find))
+        grid.add_row(*build_row(i, show_indexes, highlight=opts.find))
 
     layout = Table.grid(expand=True)
     layout.add_row(grid)
     layout.add_row("@gadgetoid\nhttps://pico.pinout.xyz")
 
-    print(Panel(
+    return Panel(
         layout,
         title="Raspberry Pi Pico Pinout",
         expand=False,
-        style=THEME["panel_light"] if opts_light_mode else THEME["panel"]))
+        style=THEME["panel_light"] if opts.light_mode else THEME["panel"])
+
+
+class Options():
+    def __init__(self, argv):
+        argv.pop(0)
+
+        if "--help" in argv:
+            usage()
+
+        if "--version" in argv:
+            print(f"{__version__}")
+            sys.exit(0)
+
+        self.all = "--all" in argv
+        self.show_pins = "--pins" in argv
+        self.show_gpio = "--hide-gpio" not in argv
+        self.light_mode = "--light" in argv
+        self.find = None
+
+        if "--find" in argv:
+            index = argv.index("--find") + 1
+            if index >= len(argv) or argv[index].startswith("--"):
+                usage("--find needs something to find.")
+            self.find = argv.pop(index)
+
+        # Assume any non -- args are labels
+        self.show = [self.valid_label(arg) for arg in argv if not arg.startswith("--")]
+
+        if self.show == [] and self.all:
+            self.show = COLS[2:]
+        elif self.all:
+            usage("Please use either --all or a list of interfaces.")
+
+    def valid_label(self, label):
+        if label not in COLS[2:]:
+            usage(f"Invalid interface \"{label}\".")
+        return label
+
+
+def main():
+    rich.print(picopins(Options(sys.argv)))
 
 
 if __name__ == "__main__":

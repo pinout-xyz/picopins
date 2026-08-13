@@ -120,7 +120,7 @@ def search(pin, highlight):
     # Hack to make "--find adc" also find A0, A1, etc
     if highlight.lower() == "adc":
         highlight += "|a[0-9]"
-    highlight = re.compile(highlight, re.I)
+    highlight = re.compile(highlight, re.IGNORECASE)
     # Match search term against pin label
     return re.search(highlight, pin) is not None
 
@@ -205,7 +205,7 @@ def picopins(opts):
         style=THEME["panel_light"] if opts.light_mode else THEME["panel"])
 
 
-class Options():
+class Options:
     def __init__(self, argv):
         argv.pop(0)
 

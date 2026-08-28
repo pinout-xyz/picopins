@@ -43,3 +43,50 @@ jobs:
         with:
           name: ${{ env.RELEASE_FILE }}
           path: dist/
+
+  deb:
+    name: Build Debian package
+    runs-on: ubuntu-latest
+    # Build against the Raspberry Pi OS base, not whatever ubuntu-latest is
+    container: debian:trixie
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      TERM: xterm-256color
+
+    steps:
+      - name: Install Build Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential devscripts equivs git lintian \
+            debhelper dh-python pybuild-plugin-pyproject python3-all \
+            python3-hatchling python3-hatch-vcs python3-hatch-fancy-pypi-readme \
+            python3-rich
+
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Build Debian Package
+        run: |
+          dpkg-buildpackage --build=binary --no-sign
+
+      - name: Inspect Package
+        run: |
+          mv ../picopins_*_all.deb .
+          dpkg-deb --info picopins_*_all.deb
+          dpkg-deb --contents picopins_*_all.deb
+          lintian --no-tag-display-limit picopins_*_all.deb || true
+
+      - name: Install And Run
+        run: |
+          apt-get install -y ./picopins_*_all.deb
+          picopins --version
+          picopins --pico2w --testpads --internal
+
+      - name: Upload Debian Package
+        uses: actions/upload-artifact@v7
+        with:
+          name: picopins-deb
+          path: picopins_*_all.deb
+          if-no-files-found: error

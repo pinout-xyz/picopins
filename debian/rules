@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+
+# A source package has no git history, so hatch-vcs cannot derive a version.
+export SETUPTOOLS_SCM_PRETEND_VERSION := $(shell dpkg-parsechangelog -SVersion | sed 's/-[^-]*$$//')
+
+%:
+	dh $@ --with=python3 --buildsystem=pybuild

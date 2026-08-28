@@ -1,0 +1,32 @@
+Source: picopins
+Section: utils
+Priority: optional
+Maintainer: Philip Howard <pinout@gadgetoid.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-python,
+ pybuild-plugin-pyproject,
+ python3-all,
+ python3-hatch-fancy-pypi-readme,
+ python3-hatch-vcs,
+ python3-hatchling,
+Standards-Version: 4.7.0
+X-Python3-Version: >= 3.10
+Homepage: https://pico.pinout.xyz
+Vcs-Browser: https://github.com/pinout-xyz/picopins
+Vcs-Git: https://github.com/pinout-xyz/picopins.git
+
+Package: picopins
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-rich (>= 13.3.5),
+Description: command-line GPIO pinout for the Raspberry Pi Pico
+ A beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico,
+ Pico W, Pico 2 and Pico 2 W.
+ .
+ Shows the 40-pin header with SPI, I2C, UART, PWM and HSTX functions, the
+ pins wired to onboard hardware, and the underside test pads. Labels can be
+ filtered by interface and searched with a regular expression.

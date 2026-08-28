@@ -1,0 +1,56 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    env:
+      TERM: xterm-256color
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+        with:
+          # hatch-vcs derives the version from the tag, so it needs the history
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: '3.13'
+
+      - name: Build Packages
+        run: |
+          uv run make build
+
+      - name: Upload Packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      # trusted publishing needs no API token, just the OIDC id-token
+      id-token: write
+    steps:
+      - name: Download Packages
+        uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -6,9 +6,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   test:
-    name: Python ${{ matrix.python }}
+    name: Build (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,19 +24,19 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
-
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python }}
+          # hatch-vcs derives the version from the tag, so it needs the history
+          fetch-depth: 0
 
-      - name: Install Dependencies
-        run: |
-          make dev-deps
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
 
       - name: Build Packages
         run: |
-          make build
+          uv run make build
 
       - name: Upload Packages
         uses: actions/upload-artifact@v7

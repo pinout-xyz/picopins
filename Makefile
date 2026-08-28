@@ -1,7 +1,7 @@
 LIBRARY_NAME := $(shell hatch project metadata name 2> /dev/null)
 LIBRARY_VERSION := $(shell hatch version 2> /dev/null)
 
-.PHONY: usage install uninstall check pytest qa build-deps check tag wheel sdist clean dist testdeploy deploy
+.PHONY: usage version dev-deps check pre-commit qa nopost tag build clean
 usage:
 ifdef LIBRARY_NAME
 	@echo "Library: ${LIBRARY_NAME}"
@@ -11,42 +11,52 @@ else
 endif
 	@echo "Usage: make <target>, where target is one of:\n"
 	@echo "dev-deps:     install Python dev dependencies"
-	@echo "check:        perform basic integrity checks on the codebase"
-	@echo "qa:           run linting and package QA"
-	@echo "pytest:       run Python test fixtures"
+	@echo "check:        verify CHANGELOG.md has an entry for the current version"
+	@echo "qa:           run package QA (check-manifest, build, twine)"
+	@echo "pre-commit:   run pre-commit hooks (lint, whitespace) on all files"
 	@echo "clean:        clean Python build and dist directories"
 	@echo "build:        build Python distribution files"
-	@echo "testdeploy:   build and upload to test PyPi"
-	@echo "deploy:       build and upload to PyPi"
-	@echo "tag:          tag the repository with the current version\n"
+	@echo "tag:          tag the repository, eg: make tag VERSION=1.3.0\n"
+	@echo "Releases are published to PyPi by .github/workflows/publish.yml,"
+	@echo "triggered by publishing a GitHub release for the tag.\n"
+
+version:
+	@hatch version
 
 dev-deps:
-	python3 -m pip install -r requirements-dev.txt
-	sudo apt install dos2unix
+	uv sync
+	uv run pre-commit install
 
 check:
-	@bash check.sh
+	@LIBRARY_VERSION=`hatch version | awk -F '.' '{print $$1"."$$2"."$$3}'`; \
+	if grep -q "^$$LIBRARY_VERSION" CHANGELOG.md; then \
+		echo "Changes found for version $$LIBRARY_VERSION."; \
+	else \
+		echo "Changes missing for version $$LIBRARY_VERSION! Please update CHANGELOG.md."; \
+		exit 1; \
+	fi
+
+pre-commit:
+	pre-commit run --all-files
 
 qa:
 	tox -e qa
 
-pytest:
-	tox -e py
-
 nopost:
-	@bash check.sh --nopost
+	@POST_VERSION=`hatch version | awk -F '.' '{print $$4}'`; \
+	if [ -n "$$POST_VERSION" ]; then \
+		echo "Found .$$POST_VERSION on library version; tag a release to build a clean version."; \
+		exit 1; \
+	fi
 
 tag:
-	git tag -a "v${LIBRARY_VERSION}" -m "Version ${LIBRARY_VERSION}"
+ifndef VERSION
+	$(error Please specify a version, eg: make tag VERSION=1.3.0)
+endif
+	git tag -a "v${VERSION}" -m "Version ${VERSION}"
 
-build: check
-	@hatch build
+build:
+	uv build
 
 clean:
 	-rm -r dist
-
-testdeploy: build
-	twine upload --repository testpypi dist/*
-
-deploy: nopost build
-	twine upload dist/*

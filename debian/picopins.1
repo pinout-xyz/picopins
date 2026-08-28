@@ -1,0 +1,90 @@
+.TH PICOPINS 1 "2026-08-28" "picopins" "User Commands"
+.SH NAME
+picopins \- command-line GPIO pinout for the Raspberry Pi Pico
+.SH SYNOPSIS
+.B picopins
+.RI [ options ]
+.RI [ interface .\|.\|.]
+.SH DESCRIPTION
+.B picopins
+prints a GPIO pinout and pin function guide for the Raspberry Pi Pico, Pico W,
+Pico 2 and Pico 2 W.
+.PP
+By default it shows the GPIO names for the original Pico. Interfaces are added
+by naming them, and the board is selected with one of the board options.
+.SH BOARD OPTIONS
+.TP
+.B \-\-pico
+Raspberry Pi Pico. This is the default.
+.TP
+.B \-\-picow
+Raspberry Pi Pico W.
+.TP
+.B \-\-pico2
+Raspberry Pi Pico 2.
+.TP
+.B \-\-pico2w
+Raspberry Pi Pico 2 W.
+.SH INTERFACES
+One or more of
+.BR spi ,
+.BR i2c ,
+.BR uart ,
+.B pwm
+and
+.BR hstx .
+.B hstx
+is available on the Pico 2 and Pico 2 W only.
+.TP
+.B \-\-all
+Show every interface available on the selected board.
+.SH OPTIONS
+.TP
+.B \-\-pins
+Show physical pin numbers alongside the GPIO names.
+.TP
+.B \-\-hide\-gpio
+Hide the GPIO names.
+.TP
+.B \-\-internal
+List the pins wired to onboard hardware, such as the LED, the VBUS and VSYS
+sense pins and, on the wireless boards, the WL_GPIO pins.
+.TP
+.B \-\-testpads
+List the test pads on the underside of the board.
+.TP
+.B \-\-light
+Use a light colour scheme.
+.TP
+.BI \-\-find " text"
+Highlight pins whose labels match
+.IR text ,
+which may be a regular expression.
+.TP
+.B \-\-version
+Print the version and exit.
+.TP
+.B \-\-help
+Print a usage summary and exit.
+.SH EXAMPLES
+.TP
+.B picopins
+Basic GPIO pinout for the Pico.
+.TP
+.B picopins i2c
+GPIO names with I2C labels.
+.TP
+.B picopins \-\-pico2w \-\-all
+Every interface, for a Pico 2 W.
+.TP
+.B picopins \-\-picow \-\-internal
+What the Pico W wires up itself.
+.TP
+.B picopins \-\-all \-\-find "PWM.* A"
+Highlight every PWM channel A label.
+.SH SEE ALSO
+The interactive pinouts at https://pico.pinout.xyz,
+https://picow.pinout.xyz, https://pico2.pinout.xyz and
+https://pico2w.pinout.xyz.
+.SH AUTHOR
+Philip Howard <pinout@gadgetoid.com>

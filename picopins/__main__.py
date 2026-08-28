@@ -6,6 +6,8 @@ import rich
 from rich.panel import Panel
 from rich.table import Table
 
+from picopins import __version__
+
 """
 picopins, by @gadgetoid
 
@@ -17,8 +19,6 @@ https://www.patreon.com/gadgetoid
 Shout-out to Raspberry Pi Spy for having almost this exact idea first:
 https://www.raspberrypi-spy.co.uk/2022/12/pi-pico-pinout-display-on-the-command-line/
 """
-
-__version__ = '1.2.0'
 
 PINOUT = [line.split("|") for line in """
       |      |         |        |        |      |  |     ┏━━━━━┓     |  |          |        |        |         |      |
@@ -93,7 +93,8 @@ POWER_PINS = [
     ("3v3 Out", "Chip 3v3 supply", "Can power external circuitry, keep the load under 300mA"),
 ]
 
-INTERNAL_PINS = POWER_PINS + [
+INTERNAL_PINS = [
+    *POWER_PINS,
     ("GP23", "SMPS power-save", "LOW (default) for efficiency (PFM), HIGH for less ripple (PWM)"),
     ("GP24", "VBUS sense", "HIGH if USB or VBUS power is present"),
     ("GP25", "User LED", ""),
@@ -101,7 +102,8 @@ INTERNAL_PINS = POWER_PINS + [
     ("A4", "Temperature", "Onboard temperature sensor"),
 ]
 
-INTERNAL_PINS_WIRELESS = POWER_PINS + [
+INTERNAL_PINS_WIRELESS = [
+    *POWER_PINS,
     ("GP23", "Wireless power on", ""),
     ("GP24", "Wireless SPI data / IRQ", ""),
     ("GP25", "Wireless SPI CSn", "Also enables the GP29 ADC when HIGH"),
@@ -118,13 +120,15 @@ USB_TESTPADS = [
     ("TP3", "USB DP", "USB data positive"),
 ]
 
-TESTPADS = USB_TESTPADS + [
+TESTPADS = [
+    *USB_TESTPADS,
     ("TP4", "GP23 / SMPS PS", "Marked do not use in the datasheet"),
     ("TP5", "GP25 / LED", "Only swings from 0V to the LED forward voltage"),
     ("TP6", "BOOTSEL", "Short low at power-up to boot into BOOTSEL"),
 ]
 
-TESTPADS_WIRELESS = USB_TESTPADS + [
+TESTPADS_WIRELESS = [
+    *USB_TESTPADS,
     ("TP4", "WL_GPIO1 / SMPS PS", "Marked do not use in the datasheet"),
     ("TP5", "WL_GPIO0 / LED", "Only swings from 0V to the LED forward voltage"),
     ("TP6", "BOOTSEL", "Short low at power-up to boot into BOOTSEL"),
@@ -156,7 +160,8 @@ BOARDS = {
         "interfaces": ["spi", "i2c", "uart", "pwm", "hstx"],
         "led": "GP25",
         "internal": INTERNAL_PINS,
-        "testpads": TESTPADS + [
+        "testpads": [
+            *TESTPADS,
             ("TP7", "1V1", "Core voltage, marked do not use in the datasheet"),
         ],
     },

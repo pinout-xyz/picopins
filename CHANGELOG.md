@@ -1,6 +1,6 @@
 # Changelog
 
-1.2.0
+1.3.0
 -----
 
 * Add `--picow`, `--pico2` and `--pico2w` alongside the default `--pico`
@@ -8,6 +8,14 @@
 * Add `--internal` to list the pins wired to onboard hardware
 * Add `--testpads` to list the underside test pads
 * Draw the wireless module and relocated debug pads on the W boards
+
+1.2.0
+-----
+
+* Add `--version`
+* Make `--find GP25` and `--find LED` highlight the onboard LED
+* Refactor options parsing into a class
+* Pin a minimum `rich` version
 
 1.1.0
 -----

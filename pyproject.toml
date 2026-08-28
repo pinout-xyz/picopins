@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-fancy-pypi-readme"]
+requires = ["hatchling", "hatch-vcs", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
@@ -41,8 +41,28 @@ Homepage = "https://pico.pinout.xyz"
 [project.scripts]
 picopins = "picopins.__main__:main"
 
+[dependency-groups]
+dev = [
+    "check-manifest",
+    "ruff==0.15.20",
+    "codespell",
+    "pre-commit",
+    "twine",
+    "hatch",
+    "hatch-vcs",
+    "hatch-fancy-pypi-readme",
+    "tox",
+]
+
+# Normalises into either:
+#   picopins-X.Y.Z             (on a vX.Y.Z tag)
+#   picopins-X.Y.Z.postN+gHASH (N commits past vX.Y.Z)
 [tool.hatch.version]
-path = "picopins/__main__.py"
+source = "vcs"
+raw-options = { version_scheme = "post-release" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "picopins/_version.py"
 
 [tool.hatch.build]
 include = [
@@ -58,7 +78,8 @@ include = [
 ]
 exclude = [
     ".*",
-    "dist"
+    "dist",
+    "uv.lock"
 ]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
@@ -81,6 +102,7 @@ exclude = [
 line-length = 200
 
 [tool.ruff.lint]
+extend-select = ["I", "UP", "SIM", "PIE", "C4", "B", "RUF", "PERF", "FURB", "PLE"]
 ignore = [
     'E701'
 ]
@@ -88,27 +110,22 @@ ignore = [
 [tool.codespell]
 skip = """
 ./.tox,\
+./.venv,\
 ./.egg,\
 ./.git,\
 ./__pycache__,\
 ./build,\
-./dist.\
+./dist\
 """
-
-[tool.isort]
-line_length = 200
 
 [tool.check-manifest]
 ignore = [
-    '.stickler.yml',
-    'boilerplate.md',
-    'check.sh',
-    'install.sh',
-    'uninstall.sh',
     'Makefile',
     'tox.ini',
     'tests/*',
     'examples/*',
     '.coveragerc',
-    'requirements-dev.txt'
+    '.editorconfig',
+    '.pre-commit-config.yaml',
+    'picopins/_version.py'
 ]

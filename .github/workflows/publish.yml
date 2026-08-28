@@ -37,6 +37,38 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+  deb:
+    name: Attach Debian package to the release
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    permissions:
+      contents: write
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Install Build Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential devscripts git gh \
+            debhelper dh-python pybuild-plugin-pyproject python3-all \
+            python3-hatchling python3-hatch-vcs python3-hatch-fancy-pypi-readme
+
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Build Debian Package
+        run: |
+          dpkg-buildpackage --build=binary --no-sign
+          mv ../picopins_*_all.deb .
+
+      - name: Attach To Release
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" picopins_*_all.deb --clobber
+
   publish:
     name: Publish to PyPI
     needs: build

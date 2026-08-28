@@ -1,7 +1,10 @@
 LIBRARY_NAME := $(shell hatch project metadata name 2> /dev/null)
 LIBRARY_VERSION := $(shell hatch version 2> /dev/null)
 
-.PHONY: usage version dev-deps check pre-commit qa nopost tag build clean
+DEB_VERSION := $(shell sed -nE '1s/^[^(]*\(([^)]*)\).*/\1/p' debian/changelog 2> /dev/null)
+CHANGELOG_VERSION := $(shell awk '/^[0-9]+\.[0-9]+\.[0-9]+$$/{print; exit}' CHANGELOG.md 2> /dev/null)
+
+.PHONY: usage version dev-deps check pre-commit qa nopost tag build clean deb-deps deb
 usage:
 ifdef LIBRARY_NAME
 	@echo "Library: ${LIBRARY_NAME}"
@@ -16,7 +19,9 @@ endif
 	@echo "pre-commit:   run pre-commit hooks (lint, whitespace) on all files"
 	@echo "clean:        clean Python build and dist directories"
 	@echo "build:        build Python distribution files"
-	@echo "tag:          tag the repository, eg: make tag VERSION=1.3.0\n"
+	@echo "tag:          tag the repository, eg: make tag VERSION=1.3.0"
+	@echo "deb-deps:     install debian packaging dependencies"
+	@echo "deb:          build a debian package\n"
 	@echo "Releases are published to PyPi by .github/workflows/publish.yml,"
 	@echo "triggered by publishing a GitHub release for the tag.\n"
 
@@ -33,6 +38,12 @@ check:
 		echo "Changes found for version $$LIBRARY_VERSION."; \
 	else \
 		echo "Changes missing for version $$LIBRARY_VERSION! Please update CHANGELOG.md."; \
+		exit 1; \
+	fi
+	@if [ "${CHANGELOG_VERSION}" = "${DEB_VERSION}" ]; then \
+		echo "debian/changelog is at ${DEB_VERSION}."; \
+	else \
+		echo "debian/changelog is at ${DEB_VERSION}, CHANGELOG.md is at ${CHANGELOG_VERSION}! Please run dch -v ${CHANGELOG_VERSION}."; \
 		exit 1; \
 	fi
 
@@ -57,6 +68,13 @@ endif
 
 build:
 	uv build
+
+deb-deps:
+	sudo apt-get install -y debhelper dh-python pybuild-plugin-pyproject python3-all \
+		python3-hatchling python3-hatch-vcs python3-hatch-fancy-pypi-readme
+
+deb:
+	dpkg-buildpackage --build=binary --no-sign
 
 clean:
 	-rm -r dist

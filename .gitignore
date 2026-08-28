@@ -21,3 +21,9 @@ library/debian/
 .venv
 uv.lock
 picopins/_version.py
+debian/.debhelper/
+debian/*.debhelper
+debian/*.substvars
+debian/debhelper-build-stamp
+debian/files
+debian/picopins/

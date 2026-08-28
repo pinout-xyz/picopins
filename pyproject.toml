@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "picopins"
 dynamic = ["version", "readme"]
-description = "A command-line pinout for the Raspberry Pi Pico W"
+description = "A command-line pinout for the Raspberry Pi Pico, Pico W, Pico 2 and Pico 2 W"
 license = {file = "LICENSE"}
 requires-python = ">= 3.10"
 authors = [

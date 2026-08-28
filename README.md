@@ -1,6 +1,6 @@
 # Raspberry Pi Pico GPIO Pinout
 
-A beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico.
+A beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico, Pico W, Pico 2 and Pico 2 W.
 
 ![Example image](https://raw.githubusercontent.com/pinout-xyz/picopins/main/example.png)
 
@@ -11,15 +11,29 @@ A beautiful GPIO pinout and pin function guide for the Raspberry Pi Pico.
 # Usage
 
 ```
-usage: picopins [--pins] [--all] or {spi,i2c,uart,pwm}
-       --pins - show physical pin numbers
-       --all or {spi,i2c,uart,pwm} - pick list of interfaces to show
-       --hide-gpio - hide GPIO pins
+usage: picopins [--...] [--all] or {spi,i2c,uart,pwm,hstx} [--find <text>]
+       --pico          - Pico, the default. Or --picow, --pico2, --pico2w
+       --pins          - show physical pin numbers
+       --all or {spi,i2c,uart,pwm,hstx} - pick list of interfaces to show
+                         hstx is Pico 2 and Pico 2 W only
+       --hide-gpio     - hide GPIO pins
+       --internal      - list the pins wired to onboard hardware
+       --testpads      - list the underside test pads
+       --light         - melt your eyeballs
        --find "<text>" - highlight pins matching <text>
+                         supports regex if you're feeling sassy!
 
-eg:    picopins i2c  - show GPIO and I2C labels
-       picopins      - basic GPIO pinout
+eg:    picopins i2c                    - show GPIO and I2C labels
+       picopins                        - basic GPIO pinout
+       picopins --pico2w --all         - everything, for a Pico 2 W
+       picopins --picow --internal     - what the Pico W wires up itself
+       picopins --all --find "PWM3 A"  - highlight any "PWM3 A" labels
+       picopins --all --find "PWM.* A" - highlight any PWM A channels
 ```
+
+The 40-pin header is identical across all four boards, apart from HSTX on
+GP12-GP19 of the RP2350 boards. What differs is the hardware wired up behind
+the scenes - `--internal` and `--testpads` show it.
 
 # Installing
 

@@ -32,7 +32,7 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: System :: Hardware",
 ]
-dependencies = ["rich>=13.3.5"]
+dependencies = ["rich>=15.0.0"]
 
 [project.urls]
 GitHub = "https://www.github.com/pinout-xyz/picopins"

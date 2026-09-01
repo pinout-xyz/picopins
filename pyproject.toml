@@ -44,7 +44,7 @@ picopins = "picopins.__main__:main"
 [dependency-groups]
 dev = [
     "check-manifest",
-    "ruff==0.16.4",
+    "ruff==0.16.5",
     "codespell",
     "pre-commit",
     "twine",
